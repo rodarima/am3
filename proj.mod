@@ -7,7 +7,7 @@ range N=1..nNurses;
 range H=1..nHours;
 int D[d in H]=...;
 int maxConsec=5;
-int maxPresent=10;
+int maxPresence=10;
 int maxHours=8;
 int minHours=2;
 
@@ -40,6 +40,6 @@ subject to {
 	  	sum(k in 0..maxConsec) NWorking[i, j+k] <= maxConsec;
 	 
 	forall(i in N)
-	  	sum(h in H)NPresent[i, h] <= maxPresent; 
+	  	sum(h in H)NPresent[i, h] <= maxPresence; 
 	
 }
