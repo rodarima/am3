@@ -46,6 +46,10 @@ subject to {
 	//nurse cannot work for more than maxConsec consecutive hrs
 	forall(i in N, j in 1..nHours-maxConsec)
 	  	sum(k in 0..maxConsec) NWorking[i, j+k] <= maxConsec;
+	  	
+	//nurse cannot work for more than maxConsec consecutive hrs
+	forall(i in N, j in 1..maxConsec)
+	  	sum(h in 1..j) NWorking[i, h] + sum(h in nHours-maxConsec+j..nHours)NWorking[i, h] <= maxConsec;
 
 	//nurses cannot be present for more than maxPresent hrs
 	forall(i in N)
