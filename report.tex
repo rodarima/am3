@@ -20,7 +20,7 @@ TODO: Describe params...
 
 \subsection{Decision variables}
 
-For the problem, 3 matrices are needed as decision variables. The last one is 
+For the problem, 3 matrices are needed as decision variables. The last one is
 auxiliary.
 %
 \begin{table}[h]
@@ -37,31 +37,31 @@ $T$ & Binary matrix of size $N \times H$.\\
 \end{table}
 
 \noindent
-The matrix $P$ has the element $P_{n,h} = 1$ if the nurse $n$ is at the hospital 
+The matrix $P$ has the element $P_{n,h} = 1$ if the nurse $n$ is at the hospital
 at hour $n$, also if is working, $W_{n,h} = 1$, otherwise 0.
 %
-The matrix $T$ is an auxiliary matrix, with the element $T_{n,h} = 1$ if the 
+The matrix $T$ is an auxiliary matrix, with the element $T_{n,h} = 1$ if the
 nurse $n$ is travelling to the hospital at the hour $h$, otherwise 0.
 
 \subsection{Constraints}
 
-\paragraph{Constraint 1} At least $\textrm{demand}_h$ nurses should be working 
+\paragraph{Constraint 1} At least $\textrm{demand}_h$ nurses should be working
 at the hour $h$.
 $$ \forall h\in H,\, \sum_{n \in N} W_{n,h} \ge \textrm{demand}_h$$
 %
-\paragraph{Constraint 2} Each nurse should work at least minHours.
-$$ \forall n \in N,\, \sum_{h \in H} W_{n,h} \ge \textrm{minHours} $$
+\paragraph{Constraint 2} Each working nurse should work at least minHours.
+$$ \forall n \in N,\, \sum_{h \in H} W_{n,h} \ge \textrm{minHours} * \sum_{j \in H} T_{n,j} $$
 %
 \paragraph{Constraint 3} Each nurse should work at most maxHours.
 $$ \forall n \in N,\, \sum_{h \in H} W_{n,h} \le \textrm{maxHours} $$
 %
-\paragraph{Constraint 4} Each nurse should work at most maxConsec consecutive 
+\paragraph{Constraint 4} Each nurse should work at most maxConsec consecutive
 hours.
 $$ \forall n \in N,\, \forall h \in [1, \textrm{nHours} - \textrm{maxConsec}],$$
 $$\sum_{k \in [0, maxConsec]} W_{n, h+k} \le \textrm{maxConsec}
 $$
 %
-\paragraph{Constraint 5} No nurse can stay at the hospital for more than 
+\paragraph{Constraint 5} No nurse can stay at the hospital for more than
 maxPresence hours.
 $$ \forall n \in N, \, \sum_{h \in H} P_{n,h} \le \textrm{maxPresence} $$
 %
