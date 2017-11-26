@@ -30,6 +30,10 @@ subject to {
 	//nurse cannot take 2 consec rests
 	forall(i in N, j in 1..nHours-1)
 	  	NWorking[i, j] + NWorking[i, j+1] >= NPresent[i, j];
+	
+	//nurse cannot take 2 consec rests
+	forall(i in N)
+	  	NWorking[i, nHours] + NWorking[i, 1] >= NPresent[i, 1];
 
 	//nurses cannot work for more than maxHours
 	forall(i in N)
@@ -61,5 +65,5 @@ subject to {
 		NStart[n, h] <= NPresent[n, h];
 
 	forall(n in N)
-		NStart[n, 1] == NPresent[n, 1];
+		NStart[n, 1] >= 1 - NPresent[n, nHours] + NPresent[n, 1] - 1;
 }
