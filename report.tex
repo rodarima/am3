@@ -69,7 +69,10 @@ $$ \forall n \in N, \, \sum_{h \in H} P_{n,h} \le \textrm{maxPresence} $$
 $$ \forall n \in N,\, \forall h \in [1, \textrm{nHours-1}],$$
 $$W_{n, h} + W_{n, h+1} \ge P_{n,h+1} $$
 %
-\paragraph{Constraint 7} Add travel constraint if they work...
+\paragraph{Constraint 7} Working nurses can travel to hospital at most once.
+$$ \forall n \in N,\,$$
+$$ \sum_{h \in H} T_{n,h} \le 1 $$
+%
 
 
 \end{document}
