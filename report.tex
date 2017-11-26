@@ -73,6 +73,23 @@ $$W_{n, h} + W_{n, h+1} \ge P_{n,h+1} $$
 $$ \forall n \in N,\,$$
 $$ \sum_{h \in H} T_{n,h} \le 1 $$
 %
+\paragraph{Constraint 8} If a nurse is present at current hour and wasnt at previous hour, then they traveled to hospital at current hour.
+$$ \forall n N, \,\forall h \in [2, \textrm{nHours}],\,$$
+$$ T_{n,h} \ge 1 - P_{n, h-1} + P_{n, h} - 1 $$
+%
+\paragraph{Constraint 9} If nurse travels at current hour, then they were not present at previous hour.
+$$ \forall n \in N,\,\forall h \in [2, \textrm{nHours}],\,$$
+$$ T_{n,h} \le 1 - P_{n, h-1} $$
+%
+\paragraph{Constraint 10} If nurse travels at current hour, then they are present at current hour.
+$$ \forall n \in N,\,\forall h \in H,\,$$
+$$ T_{n,h} \le P_{n, h} $$
+%
+
+\paragraph{Constraint 11} If nurse is present at first hour, then they traveled at first hour.
+$$ \forall n \in N,\,$$
+$$ T_{n, 1} = P_{n, 1} $$
+%
 
 
 \end{document}

@@ -1,10 +1,11 @@
 /*********************************************
  * OPL 12.6.0.0 Data
  *********************************************/
-D = [2 2 2 2 2 2 2 2 2];
-nNurses=8;
-nHours=9;
+
+nNurses=2;
+nHours=6;
 maxConsec=5;
-maxPresent=8;
+maxPresent=3;
 maxHours=7;
 minHours=2;
+D = [1 0 0 1 1 1];
