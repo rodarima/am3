@@ -1,0 +1,5 @@
+read proj.lp
+optimize
+write sol.xml
+sol
+quit
