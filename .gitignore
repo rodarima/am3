@@ -1,0 +1,9 @@
+sol.xml
+proj.lp
+cplex.log
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+_minted-report/
