@@ -30,10 +30,6 @@ subject to {
 	//nurse cannot take 2 consec rests
 	forall(i in N, j in 1..nHours-1)
 	  	NWorking[i, j] + NWorking[i, j+1] >= NPresent[i, j];
-	
-	//nurse cannot take 2 consec rests
-	forall(i in N)
-	  	NWorking[i, nHours] + NWorking[i, 1] >= NPresent[i, 1];
 
 	//nurses cannot work for more than maxHours
 	forall(i in N)
@@ -47,10 +43,6 @@ subject to {
 	forall(i in N, j in 1..nHours-maxConsec)
 	  	sum(k in 0..maxConsec) NWorking[i, j+k] <= maxConsec;
 	  	
-	//nurse cannot work for more than maxConsec consecutive hrs
-	forall(i in N, j in 1..maxConsec)
-	  	sum(h in 1..j) NWorking[i, h] + sum(h in nHours-maxConsec+j..nHours)NWorking[i, h] <= maxConsec;
-
 	//nurses cannot be present for more than maxPresent hrs
 	forall(i in N)
 	  	sum(h in H)NPresent[i, h] <= maxPresent;
@@ -59,15 +51,23 @@ subject to {
 	forall (n in N)
   		sum(h in H) NStart[n,h] <= 1;
 
-	forall(n in N, h in 2..nHours)
+	/* The following 3 constraints are needed to set NStart[n,h] to one if 
+	NPresent[n,h-1] and NPresent[n,h] are 0 and 1, respectively. So we 
+	detect the nurse traveling to the hospital at the hour h. The operation 
+	is just the AND of NOT NPresent[n,h-1] and NPresent[n,h]. With (NOT a) 
+	as (1 - a). Only the hours in [2, nHours] are used here */
+
+	forall(n in N, h in 2..nHours) {
 		NStart[n, h] >= 1 - NPresent[n, h-1] + NPresent[n, h] - 1;
-
-	forall(n in N, h in 2..nHours)
 		NStart[n, h] <= 1 - NPresent[n, h-1];
-
-	forall(n in N, h in H)
 		NStart[n, h] <= NPresent[n, h];
+	}
 
-	forall(n in N)
-		NStart[n, 1] >= 1 - NPresent[n, nHours] + NPresent[n, 1] - 1;
+	/* We need to add the cases where the nurses start at hour 1. If they 
+	work at h, then must travel at h, otherwise not*/
+
+	forall(n in N) {
+		NStart[n, 1] == NPresent[n, 1];
+	}
+
 }

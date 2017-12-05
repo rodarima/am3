@@ -2,7 +2,7 @@
  * OPL 12.6.0.0 Data
  *********************************************/
 
-nNurses=2;
+nNurses=3;
 nHours=6;
 maxConsec=5;
 maxPresent=3;
