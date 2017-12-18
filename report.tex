@@ -50,7 +50,8 @@ at the hour $h$.
 $$ \forall h\in H,\, \sum_{n \in N} W_{n,h} \ge \textrm{demand}_h$$
 %
 \paragraph{Constraint 2} Each working nurse should work at least minHours.
-$$ \forall n \in N,\, \sum_{h \in H} W_{n,h} \ge \textrm{minHours} * \sum_{j \in H} T_{n,j} $$
+$$ \forall n \in N,\, \sum_{h \in H} W_{n,h} \ge
+	\textrm{minHours} * \sum_{j \in H} T_{n,j} $$
 %
 \paragraph{Constraint 3} Each nurse should work at most maxHours.
 $$ \forall n \in N,\, \sum_{h \in H} W_{n,h} \le \textrm{maxHours} $$
@@ -63,7 +64,8 @@ $$
 %
 \paragraph{Constraint 4b} Wrap around case for maxConsecutive hours.
 $$ \forall n \in N,\, \forall h \in [1, \textrm{maxConsec}],$$
-$$\sum_{j \in [1, h]} W_{n, j} + \sum_{j \in [nHours-maxConsec+h, nHours]} W_{n, j}  \le \textrm{maxConsec}
+$$\sum_{j \in [1, h]} W_{n, j} +
+	\sum_{j \in [nHours-maxConsec+h, nHours]} W_{n, j}  \le \textrm{maxConsec}
 $$
 %
 \paragraph{Constraint 5} No nurse can stay at the hospital for more than
@@ -78,7 +80,8 @@ $$W_{n, h} + W_{n, h+1} \ge P_{n,h+1} $$
 $$ \forall n \in N,\,$$
 $$ \sum_{h \in H} T_{n,h} \le 1 $$
 %
-\paragraph{Constraint 8a} If a nurse is present at current hour and wasnt at previous hour, then they traveled to hospital at current hour.
+\paragraph{Constraint 8a} If a nurse is present at current hour and wasn't at 
+previous hour, then they traveled to hospital at current hour.
 $$ \forall n N, \,\forall h \in [2, \textrm{nHours}],\,$$
 $$ T_{n,h} \ge 1 - P_{n, h-1} + P_{n, h} - 1 $$
 %
@@ -86,13 +89,50 @@ $$ T_{n,h} \ge 1 - P_{n, h-1} + P_{n, h} - 1 $$
 $$ \forall n \in N,\,$$
 $$ T_{n, 1} \ge 1 - P_{n, nHours} + P_{n, 1} - 1 $$
 %
-\paragraph{Constraint 9} If nurse travels at current hour, then they were not present at previous hour.
+\paragraph{Constraint 9} If nurse travels at current hour, then they were not 
+present at previous hour.
 $$ \forall n \in N,\,\forall h \in [2, \textrm{nHours}],\,$$
 $$ T_{n,h} \le 1 - P_{n, h-1} $$
 %
-\paragraph{Constraint 10} If nurse travels at current hour, then they are present at current hour.
+\paragraph{Constraint 10} If nurse travels at current hour, then they are 
+present at current hour.
 $$ \forall n \in N,\,\forall h \in H,\,$$
 $$ T_{n,h} \le P_{n, h} $$
 %
+%
+\section{GRASP}
+%
+The GRASP method is a metaheuristic in which each iteration consists of two 
+phases: construction and local search.
+
+First, we need to specify the problem in terms of part that can be selected. The 
+ground set $E$ contains elements that can be selected in order to build a 
+solution. Let $S$ be a posible solution by selecting parts of $E$, so $S \in 
+2^E$. We can build $F$ as the set of solutions that are feasible $F \subseteq 
+2^E$
+
+In our problem, we need to select the behavior of $N$ nurses. A posible solution 
+can be defined by the selection of elements that describe what a nurse $n$ is 
+doing at the time $h$. A tuple $t = (n, h, s)$ can code that the nurse $n$ 
+should be at state $s$ in the time $h$. A feasible solution $S$ should consist 
+of a selection of tuples $t$ such that, they define the behavior of every nurse 
+at every time, and also be consistent with the previous constraints.
+
+Furthermore, in order to build a solution, a notion of cost is needed to select 
+among all the posible tuples that can be selected. Lets ignore the constraints 
+in the cost function, and check the feasibility at the end. Iteratively we can 
+select a naive solution by a simple procedure. We begin with an empty solution, 
+at time $h = 1$. At that time, we have a demand $d$ given by 
+$\textrm{demand}_h$. A good candidate will be try to meet the demand by adding 
+working nurses, the RCL will have the tuples with working nurses in such a way 
+that they are selected with high probability. Then, one of the posible 
+combination will be chosen, hopefully assigning one nurse to work in that time.  
+Then we continue adding nurses in a working state. Once the demand is met, then 
+we now will prefer adding to the solution tuples that contain nurses in a 
+non-working status. The probability of such state should now be added with high 
+probability.
+
+The selection of the cost function is the core of the GRASP algorithm, so we 
+need to take some care to guarantee a good behavior.
 
 \end{document}
