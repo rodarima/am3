@@ -17,12 +17,13 @@
 
 Our problem to solve is to optimally assign nurses to working hours in a hospital such that demand for each hour is met and the fewest number of nurses are used.
 
+This is an NP-hard problem in combinatorial optimization. It can be formulated as an integer program.
+
 We are given a set of nurses, a specification of the demands for each hour as well as a set of constraints that must be satisfied regarding how long each nurse can work.
 
 \subsection{Parameters}
 
-
-We are given a set of available nurses of size $N$, a list of hours along with their corresponding demand ${demand}_h$, as well as th constraints that must be satisfied.
+We are given a set of available nurses of size $N$, a list of demand for each hour ${demand}_h$ of size $H$, as well as the constraints that must be satisfied.
 
 The parameters are given as follows:
     \begin{enumerate}
