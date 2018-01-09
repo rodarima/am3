@@ -22,7 +22,8 @@ class BRKGA:
 
 			print(self.last_status)
 			self.best_fit = np.min(fit)
-			if self.best_fit < self.break_fit: break
+			if self.break_fit != None:
+				if self.best_fit < self.break_fit: break
 
 			#print(np.min(fit), np.mean(fit))
 
@@ -100,13 +101,14 @@ class SolutionBRKGA(Solution, BRKGA):
 		self.debug = True
 
 		# Population size
-		self.size = 20
+		self.size = 10
 
 		self.p_elite = 0.1
 		self.p_mutant = 0.2
 		self.p_inherit = 0.7
 		self.max_iter = 1000
-		self.break_fit = 10 * self.N
+		#self.break_fit = 10 * self.N
+		self.break_fit = None
 
 		# Number of genes
 		self.genes = self.N * (3 + self.H)
@@ -313,7 +315,7 @@ class SolutionBRKGA(Solution, BRKGA):
 						bad_far += p.minHours - presences_fl[n]
 
 
-		fit = 10*max(1, nurses_needed) + bad_demand + bad_hours + bad_consec + bad_far
+		fit = max(1, nurses_needed) + bad_demand + bad_hours + bad_consec + bad_far
 
 		self.P = P
 		self.W = W
@@ -353,7 +355,7 @@ if __name__ == '__main__':
 	for i in range(problems):
 
 		while True:
-			p = Problem(seed, 10)
+			p = Problem(seed, 50)
 			seed += 1
 			lp = SolutionLP(p, 'nurses')
 			solver_params = dict(keepFiles=0, msg=0, timelimit=20)
