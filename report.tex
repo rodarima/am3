@@ -23,12 +23,12 @@ We are given a set of nurses, a specification of the demands for each hour as we
 
 \subsection{Parameters}
 
-We are given a set of available nurses of size $N$, a list of demand for each hour ${demand}_h$ of size $H$, as well as the constraints that must be satisfied.
+We are given a set of available nurses of size $N$, a list ${demand}_h$ of size $H$ with the number of nurses needed each hour, as well as the constraints that must be satisfied.
 
 The parameters are given as follows:
     \begin{enumerate}
     \paragraph{}
-        \item [${demand}_h$] a list demands for each hour
+        \item [${demand}_h$] a list of demands for each hour
         \item [${maxHours}$] maximum number of hours each nurse may work
         \item [${minHours}$] minimum number of hours each nurse may work
         \item [${maxConsec}$] maximum number of consecutive hours each nurse may work
@@ -64,56 +64,56 @@ nurse $n$ is travelling to the hospital at the hour $h$, otherwise 0.
 
 \paragraph{Constraint 1} At least $\textrm{demand}_h$ nurses should be working
 at the hour $h$.
-$$ \forall h\in H,\, \sum_{n \in N} W_{n,h} \ge \textrm{demand}_h$$
+$$ \forall h\in [1, H],\, \sum_{n \in N} W_{n,h} \ge \textrm{demand}_h$$
 %
 \paragraph{Constraint 2} Each working nurse should work at least minHours.
-$$ \forall n \in N,\, \sum_{h \in H} W_{n,h} \ge
-  \textrm{minHours} * \sum_{j \in H} T_{n,j} $$
+$$ \forall n \in N,\, \sum_{h \in [1, H]} W_{n,h} \ge
+  \textrm{minHours} * \sum_{j \in [1, H]} T_{n,j} $$
 %
 \paragraph{Constraint 3} Each nurse should work at most maxHours.
-$$ \forall n \in N,\, \sum_{h \in H} W_{n,h} \le \textrm{maxHours} $$
+$$ \forall n \in N,\, \sum_{h \in [1, H]} W_{n,h} \le \textrm{maxHours} $$
 %
 \paragraph{Constraint 4a} Each nurse should work at most maxConsec consecutive
 hours.
-$$ \forall n \in N,\, \forall h \in [1, \textrm{nHours} - \textrm{maxConsec}],$$
+$$ \forall n \in N,\, \forall h \in [1, \textrm{H} - \textrm{maxConsec}],$$
 $$\sum_{k \in [0, maxConsec]} W_{n, h+k} \le \textrm{maxConsec}
 $$
 %
 \paragraph{Constraint 4b} Wrap around case for maxConsecutive hours.
 $$ \forall n \in N,\, \forall h \in [1, \textrm{maxConsec}],$$
 $$\sum_{j \in [1, h]} W_{n, j} +
-  \sum_{j \in [nHours-maxConsec+h, nHours]} W_{n, j}  \le \textrm{maxConsec}
+  \sum_{j \in [H-maxConsec+h, H]} W_{n, j}  \le \textrm{maxConsec}
 $$
 %
 \paragraph{Constraint 5} No nurse can stay at the hospital for more than
 maxPresence hours.
-$$ \forall n \in N, \, \sum_{h \in H} P_{n,h} \le \textrm{maxPresence} $$
+$$ \forall n \in N, \, \sum_{h \in [1, H]} P_{n,h} \le \textrm{maxPresence} $$
 %
 \paragraph{Constraint 6} No nurse can rest for more than one consecutive hour.
-$$ \forall n \in N,\, \forall h \in [1, \textrm{nHours-1}],$$
+$$ \forall n \in N,\, \forall h \in [1, \textrm{H-1}],$$
 $$W_{n, h} + W_{n, h+1} \ge P_{n,h+1} $$
 %
 \paragraph{Constraint 7} Working nurses can travel to hospital at most once.
 $$ \forall n \in N,\,$$
-$$ \sum_{h \in H} T_{n,h} \le 1 $$
+$$ \sum_{h \in [1, H]} T_{n,h} \le 1 $$
 %
 \paragraph{Constraint 8a} If a nurse is present at current hour and wasn't at
 previous hour, then they traveled to hospital at current hour.
-$$ \forall n N, \,\forall h \in [2, \textrm{nHours}],\,$$
+$$ \forall n N, \,\forall h \in [2, \textrm{H}],\,$$
 $$ T_{n,h} \ge 1 - P_{n, h-1} + P_{n, h} - 1 $$
 %
 \paragraph{Constraint 8b} Add case for wrap-around
 $$ \forall n \in N,\,$$
-$$ T_{n, 1} \ge 1 - P_{n, nHours} + P_{n, 1} - 1 $$
+$$ T_{n, 1} \ge 1 - P_{n, H} + P_{n, 1} - 1 $$
 %
 \paragraph{Constraint 9} If nurse travels at current hour, then they were not
 present at previous hour.
-$$ \forall n \in N,\,\forall h \in [2, \textrm{nHours}],\,$$
+$$ \forall n \in N,\,\forall h \in [2, \textrm{H}],\,$$
 $$ T_{n,h} \le 1 - P_{n, h-1} $$
 %
 \paragraph{Constraint 10} If nurse travels at current hour, then they are
 present at current hour.
-$$ \forall n \in N,\,\forall h \in H,\,$$
+$$ \forall n \in N,\,\forall h \in [1, H],\,$$
 $$ T_{n,h} \le P_{n, h} $$
 %
 %
@@ -159,7 +159,7 @@ Genetic algorithms borrow mechanisms from nature, namely the concept of survival
 We represent our problem with a set of individuals with an associated \textit{chromosome}, each of which encodes
 a solution.
 
-Each individual or chromosome has associated with it a fittness score, which will determine if they are an \textit{elite individual} or \textit{non-elite individual}. We can now add a bias to the selection of the parentage for next generation individuals the selecting a parent from the elite set with a higher probability in order to pass on desireable characteristics.
+Each individual or chromosome has associated with it a fitness score, which will determine if they are an \textit{elite individual} or \textit{non-elite individual}. We can now add a bias to the selection of the parentage for next generation individuals by the selecting a parent from the elite set with a higher probability in order to pass on desireable characteristics.
 
 Each chromosome is represented as a string of genes. Each gene takes on a particular value
 from an alphabet.
