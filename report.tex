@@ -154,19 +154,46 @@ need to take some care to guarantee a good behavior.
 
 \section{BRKGA}
 %
-Genetic algorithms borrow mechanisms from nature, namely the concept of survival of the fittest, in order to search a large solution space. A population of solutions is evolved over several generations by iteratively breeding new solutions by mating or \textit{crossing} individuals from previous generations. Biased Randomized-Key Genetic Algorithm (BRKGA) is such an algorithm in which certain members of the population are selected for crossover with higher probability.
+Genetic algorithms borrow mechanisms from nature, namely the concept of survival
+of the fittest, in order to search a large solution space. A population of
+solutions is evolved over several generations by iteratively breeding new
+solutions by mating or \textit{crossing} individuals from previous generations.
+Biased Randomized-Key Genetic Algorithm (BRKGA) is such an algorithm in which
+certain members of the population are selected for crossover with higher
+probability.
 
-We represent our problem with a set of individuals with an associated \textit{chromosome}, each of which encodes
-a solution.
+We represent our problem with a set of individuals with an associated
+\textit{chromosome}, each of which encodes a solution.
 
-Each individual or chromosome has associated with it a fitness score, which will determine if they are an \textit{elite individual} or \textit{non-elite individual}. We can now add a bias to the selection of the parentage for next generation individuals by the selecting a parent from the elite set with a higher probability in order to pass on desireable characteristics.
+Each individual or chromosome has associated with it a fittness score, which
+will determine if they are an \textit{elite individual} or \textit{non-elite
+individual}. We can now add a bias to the selection of the parentage for next
+generation individuals the selecting a parent from the elite set with a higher
+probability in order to pass on desireable characteristics.
 
-Each chromosome is represented as a string of genes. Each gene takes on a particular value
-from an alphabet.
+Each chromosome is represented as a string of genes. Each gene takes on a
+particular value from an alphabet.
 
 Our matrix encodes start-hour, present-hour, number-breaks, break-score
 3 scalars and an array of scores in order to place breaks.
 
 % Each gene is a vector of size N\times(3+H), the first row
 
+\subsection{Chromosome structure}
+
+The solution is codified by using three scalars $p$, $s$ and $b$ and a vector
+$v$ of size $H$ for each nurse. The scalars codify the number of hours $p$ that
+the nurse is present at the hospital, the first hour $s$ at which is at the
+hospital, and the number of breaks $b$ while is present.
+
+The vector $v$ is used from $1$ to the number of present hours $p$. Each element
+stores a score that will be used to determine the preferred hours in which a
+break should be set. Lower scores will be selected first, filling the breaks up
+to $b$.
+
+The decision whether a nurse works or not, is based on $p$, if the presence
+hours are less than $minHours$ the nurse doens't start working.
+
+The choromosome structure is then matrix of $N$ rows and $3+H$ columns, but
+flattened into a long vector of size $N \times 3+H$.
 \end{document}
