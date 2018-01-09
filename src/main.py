@@ -8,6 +8,7 @@ from nurses import Problem, Solution
 from grasp import SolutionGRASP
 from hgrasp import SolutionHGRASP
 from lp import SolutionLP
+from brkga import SolutionBRKGA
 
 import cProfile
 
@@ -16,79 +17,109 @@ import cProfile
 # be able to beat this time...
 
 seed = 8
-nurses = 50
+nurses = 90
 alpha = 0.1
 problems = 10
-solved = 0
+done = 0
+time_limit = 20
+
+DEBUG = True
+RUN_LP = False
+RUN_GRASP = False
+RUN_BRKGA = True
 
 table = []
 
 while True:
 	row = {}
-	print('Searching for a feasible problem with seed={} and nurses={}'.format(
-		seed, nurses))
 
 	row['seed'] = seed
 	row['nurses'] = nurses
 
 	p = Problem(seed, nurses)
+	seed += 1
 
-	lp = SolutionLP(p, 'nurses')
-	solver_params = dict(keepFiles=0, msg=1, timelimit=20)
-	solver = CPLEX(**solver_params)
-	#solver = GLPK(**solver_params)
+	if RUN_LP:
 
-	# FIXME: time.clock() doesn't take into account subprocess. The actual
-	# solution, using time.time() only computes real time (including other
-	# processes and interrupts) not CPU time.
-	tic = time.time()
-	st = lp.solve(solver)
-	t = time.time() - tic
-	if not st:
-		#print('Solver returned not optimal solution, skipping')
-		seed += 1
-		continue
-	if not lp.is_feasible():
-		print('FATAL: Solution not feasible. There is a BUG in LP')
-		seed += 1
-		continue
+		print('Starting LP solver up to {} seconds'.format(time_limit))
 
-	row['lp_obj'] = lp.objective()
-	row['lp_t'] = t
+		lp = SolutionLP(p, 'nurses')
+		solver_params = dict(keepFiles=0, msg=int(DEBUG), timelimit=time_limit)
+		solver = CPLEX(**solver_params)
+		#solver = GLPK(**solver_params)
 
-	#print('Solution found with seed={}'.format(seed))
+		# FIXME: time.clock() doesn't take into account subprocess. The actual
+		# solution, using time.time() only computes real time (including other
+		# processes and interrupts) not CPU time.
+		tic = time.time()
+		st = lp.solve(solver)
+		t = time.time() - tic
+		#if not st:
+		#	print('Solver returned not optimal solution, skipping')
+		#	continue
+		#if not lp.is_feasible():
+		#	print('FATAL: Solution not feasible. There is a BUG in LP')
+		#	continue
 
-	#print('Problem selected')
-	#print(p)
-	#print('LP solution:')
-	#print(lp)
+		done+=1
+
+		row['lp_obj'] = lp.objective()
+		row['lp_t'] = t
+
+		#print('Solution found with seed={}'.format(seed - 1))
+
+		#print('Problem selected')
+		#print(p)
+		#print('LP solution:')
+		#print(lp)
 
 	pr = cProfile.Profile()
 
 	#pr.enable()
 	#grasp = SolutionHGRASP(p, 'nurses')
-	grasp = SolutionGRASP(p, 'nurses')
-	tic = time.clock()
-	grasp.solve(alpha)
-	t = time.clock() - tic
-	#pr.disable()
 
-	#print('GRASP solution')
-	#print(grasp)
-	if grasp.is_feasible():
-		#print('Congratulations! GRASP solution seems valid')
-		solved += 1
-		row['grasp_obj'] = grasp.objective()
-	else:
-		row['grasp_obj'] = -1
 
-	row['grasp_t'] = t
+
+	if RUN_GRASP:
+		print('Starting GRASP')
+
+		grasp = SolutionGRASP(p, 'nurses')
+		tic = time.clock()
+		grasp.solve(alpha)
+		t = time.clock() - tic
+		#pr.disable()
+
+		#print('GRASP solution')
+		#print(grasp)
+		if grasp.is_feasible():
+			row['grasp_obj'] = grasp.objective()
+		else:
+			row['grasp_obj'] = -1
+
+		row['grasp_t'] = t
+
+
+	if RUN_BRKGA:
+		print('Starting BRKGA')
+
+		brkga = SolutionBRKGA(p)
+		brkga.debug = DEBUG
+		tic = time.clock()
+		brkga.solve()
+		t = time.clock() - tic
+
+		if brkga.is_feasible():
+			row['brkga_obj'] = brkga.objective()
+		else:
+			row['brkga_obj'] = -1
+		row['brkga_t'] = t
+
 
 	table.append(row)
+	print("Results at the time:")
+	print(tabulate(table, headers='keys'))
 
-	seed += 1
-
-	if solved >= problems: break
+	if done >= problems: break
 
 print(tabulate(table, headers='keys'))
 
