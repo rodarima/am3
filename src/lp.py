@@ -14,8 +14,9 @@ class SolutionLP(Solution):
 
 	def solve(self, solver=None):
 		if solver is None:
-			solver = GLPK(msg=1, keepFiles=1, options=['--log',self.name+'-pulp.log',
-					'--last', '--tmlim', '120'])
+			solver = CPLEX(msg=0, keepFiles=0, timelimit=10*60)
+			#solver = GLPK(msg=1, keepFiles=1, options=['--log',self.name+'-pulp.log',
+			#		'--last', '--tmlim', '120'])
 
 		status = self.lp.solve(solver)
 

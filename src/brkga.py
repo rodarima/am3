@@ -15,13 +15,24 @@ class BRKGA:
 		# Build a new population
 		self.populate()
 		self.best_fit = float('inf')
+		last_fit = float('inf')
+		rep = 0
 
 		for i in range(self.max_iter):
 
 			fit = self.decode()
 
-			print(self.last_status)
+			#if self.debug:
+			#	print(self.last_status)
 			self.best_fit = np.min(fit)
+
+			if self.best_fit == last_fit: rep+=1
+			else:
+				rep = 0
+				last_fit = self.best_fit
+
+			if rep >= self.max_rep: break
+
 			if self.break_fit != None:
 				if self.best_fit < self.break_fit: break
 
@@ -40,7 +51,8 @@ class BRKGA:
 			#input()
 
 		fit = self.decode()
-		print('Best fit found {}'.format(np.min(fit)))
+		if self.debug:
+			print('Best fit found {}'.format(np.min(fit)))
 
 		return self.population[np.argmin(fit)]
 
@@ -106,8 +118,9 @@ class SolutionBRKGA(Solution, BRKGA):
 		self.p_elite = 0.1
 		self.p_mutant = 0.2
 		self.p_inherit = 0.7
-		self.max_iter = 1000
-		#self.break_fit = 10 * self.N
+		self.max_iter = 10000
+		self.max_rep = 500
+		#self.break_fit = self.N
 		self.break_fit = None
 
 		# Number of genes
@@ -116,11 +129,11 @@ class SolutionBRKGA(Solution, BRKGA):
 	def solve(self):
 		best_individual = BRKGA.solve(self)
 		self.decode_solution(best_individual)
-		print(self.last_status)
 
 	def decode_solution(self, gene):
 
-		print('Best solution below:')
+		if self.debug:
+			print('Best solution below:')
 		self.fitness_gene(gene)
 
 		#print(solution)
@@ -166,6 +179,7 @@ class SolutionBRKGA(Solution, BRKGA):
 		presences = self.map(raw_presences, 0, p.maxPresence)
 		presences_fl = self.map(raw_presences, 0, p.maxPresence, cast=False)
 		starts = self.map(raw_starts, 0, self.H - p.minHours)
+		starts_fl = self.map(raw_starts, 0, self.H - p.minHours, cast=False)
 		breaks = self.map(raw_breaks, 0, np.ceil(p.maxPresence/2))
 		breaks_fl = self.map(raw_breaks, 0, np.ceil(p.maxPresence/2), cast=False)
 
@@ -179,6 +193,7 @@ class SolutionBRKGA(Solution, BRKGA):
 		bad_hours = 0
 		bad_consec = 0
 		bad_far = 0
+		bad = [0,0,0,0]
 		inf = 1000
 		nurses_needed = 0
 
@@ -216,15 +231,17 @@ class SolutionBRKGA(Solution, BRKGA):
 			# If works more than maxHours, infeasible
 			if presence - breaks[n] > p.maxHours:
 				# More presence then more bad
-				badness = p.maxHours - (presences_fl[n] - breaks[n])
-				bad_hours += 50 + 50 * badness
+				badness = (presences_fl[n] - breaks_fl[n]) - p.maxHours
+				bad_hours += 200 + 20 * badness
+				bad[1] +=1
 
 			# If working less than minHours, infeasible
 			if presence - breaks[n] < p.minHours:
 				# If less presence then less bad
-				badness = presences_fl[n] - breaks[n]
+				badness = p.minHours - (presences_fl[n] - breaks_fl[n])
 				#far = (p.minHours - (presence_float -  breaks[n]))
-				bad_hours += 50 + 50 * badness
+				bad_hours += 200 + 20 * badness
+				bad[1] +=1
 
 
 			# Avoid consecutive breaks
@@ -232,19 +249,17 @@ class SolutionBRKGA(Solution, BRKGA):
 			nurse_breaks = np.zeros(presence, dtype='bool')
 
 
-			# FIXME there is usually no big presence enough
-			consec_score = np.zeros(presence)
-			consec_start = p.maxConsec - 1
-			consec_end = presence - (p.maxConsec - 1)
-			consec_score[consec_start:consec_end] = -10
-
-			#print("nurse={} consec scores {}".format(n, consec_score))
-
 			# Assign breaks using break_score
 
-			for b in range(breaks[n]):
+			if presence > p.maxConsec:
+				min_breaks = 1
+			else: min_breaks = 0
+
+			max_breaks = max(min_breaks, breaks[n])
+
+			for b in range(max_breaks):
+			#for b in range(breaks_needed):
 				demand_nurse = demand[work_time] - offer[work_time]
-				#score = demand_nurse + penalty_breaks + consec_score
 				score = break_score[:presence] + penalty_breaks
 				#print("nurse={} break scores {}".format(n, score))
 				#print('Demand now {}'.format(demand_now))
@@ -285,34 +300,45 @@ class SolutionBRKGA(Solution, BRKGA):
 				#print('nurse={} max_consec={} breaks_fl={} break_score={}'.format(
 				#	n, max_consec, breaks_fl[n], break_score))
 				bad_consec += 100 * (max_consec - p.maxConsec) - 10 * breaks_fl[n]
+				bad[2] += 1
 
 		for h in range(self.H):
 
-			# If more nurses are needed
+			# If less nurses are needed
 			if demand[h] > offer[h]:
 				# The solution is infeasible
 				bad_demand += 100 * (demand[h] - offer[h])
+				bad[0] +=1
 
 				# Test if the solution is close to add a nurse covering the
 				# demand
 
 				for n in range(self.N):
 					presence = presences[n]
+					presence_fl = presences_fl[n]
 					start = starts[n]
+					start_fl = starts_fl[n]
 					end = start + presence
+					end_fl = start_fl + presence_fl
 
 					# Exclude nurses working
 					if presence >= p.minHours: continue
 
 
 					# If the nurse cannot cover the hour, thats bad
-					if start > h or end < h:
-						bad_far += p.minHours
+					if start > h:
+						dist = start_fl - h
+						bad_far += dist
+
+					elif end < h:
+						dist = h - end_fl
+						bad_far += dist
+						bad[3] += 1
 
 					# But if is close, count only the number of hours to
 					# minHours
-					else:
-						bad_far += p.minHours - presences_fl[n]
+					bad_far += p.minHours - presences_fl[n]
+					bad[3] += 1
 
 
 		fit = max(1, nurses_needed) + bad_demand + bad_hours + bad_consec + bad_far
@@ -323,12 +349,20 @@ class SolutionBRKGA(Solution, BRKGA):
 
 		#print(self)
 
-		line = 'BEST={:8.2f} FIT={:8.2f} BAD co={:7.2f} ho={:7.2f} de={:7.2f} fa={:7.2f}'.format(
-			self.best_fit, fit, bad_consec, bad_hours, bad_demand, bad_far)
+
+		#bad1, bad2, bad3, bad4
+
+		if fit < self.best_fit:
+			print(self)
+			line = 'best={:8.2f}  bad: dem={:2d}  h={:2d}  \
+consec={:2d}  far={:2d}'.format(
+				fit, *bad)
+			print('BAD consec={:7.2f} h={:7.2f} dem={:7.2f} far={:7.2f}'.format(
+				bad_consec, bad_hours, bad_demand, bad_far))
+			print(line)
 
 		#print('\r{}'.format(line), end='', flush=True)
 		#print(line)
-		self.last_status = line
 		#if self.best_fit < 150 and self.best_fit > 0:
 		#	print(self)
 		#	input()
