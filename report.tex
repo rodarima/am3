@@ -196,4 +196,60 @@ hours are less than $minHours$ the nurse doens't start working.
 
 The choromosome structure is then matrix of $N$ rows and $3+H$ columns, but 
 flattened into a long vector of size $N \times 3+H$.
+
+\subsection{Decoder}
+
+The decoder part of the algorithm, which is the only part that depends on the 
+problem, computes the fitness of each individual in the population. The fitness 
+$f(p,s,b,v)$ is a heuristic value that estimates the objective, and has to be 
+minimized. Is computed by adding five badness values $BN$, $BD$, $BH$, $BC$ and 
+$BF$ together.
+
+In order to compute the values, we first need to determine when each nurse 
+works. By using $p$ and $s$ we have the interval that they are present.  And 
+using the indices of the first $b$ lower values of $v$, we now where they rest.
+
+The number of nurses needed is the first value $BN$, which takes into account 
+that we want to minimize the number of nurses used.
+
+The value $BD$ measures the demand left that is not met. Is computed at each 
+hour $h$ as the difference of the problem demand and the nurses offer (the 
+working hours provided by the working nurses) as $BD = 100 \sum_h 
+\textrm{demand}_h - \textrm{offer}_h$.
+
+The value $BH(n)$ measures the error of each nurse $n$, when they work more than 
+$maxHours$ or when they work less than $minHours$, we use $w = p - b$ to compute 
+the number of working hours. If they work more hours than allowed, $BH(n)$ is 
+set to the number of exceeding hours $w - maxHours$. If they work less than 
+allowed, $BH(n)$ is set to the number of hours left $minHours - w$.  Finally, we 
+get $BH = \sum_n 200 + 20 BH(n)$.
+
+Note that we use the floating point representation of the values $p$, $s$, $b$ 
+and $v$ when they are part of the fitness function. So we can allow that lower 
+differences of each gene produce a change in the fitness function. Otherwise, we 
+use the integer representation of the parameters.
+
+The value $BC$ test if there is any problem with the maximum number of 
+consecutive hours that each nurse is working. For each nurse $n$ the maximum 
+number of consecutive hours $M$ is computed, and if is greater than $maxConsec$, 
+$BC(n)$ is set to $100(M - maxConsec) - 10b$. We use the breaks to prefer those 
+solutions that include more breaks. Finally we have $BC = \sum_n BC(n)$.
+
+The value $BF$ measures the distance of the non-working nurses to the hours that 
+have some demand left. The distance is computed for each hour with demand left 
+$h$ to the closest hour $c$ that the nurse would start working if $p$ was at 
+least $minHours$. Is the start hour $s$ when $s > h$ and the end hour $s+p$ when 
+$s+p < h$. So, if the nurse don't cover the hour $h$, $BF(n) = h - c$. However, 
+if the nurse could cover the hour, without changing start, we only need to take 
+into account the distance to minHours, so $BF(n) = minHours - p$. The final 
+value is the sum for all nurses that are non-working, $BF = \sum_n BF(n)$
+
+The final fitness value is just the sum of all the intermediate values:
+
+$$ f(p,s,b,v) = BN + BD + BH + BC + BF $$
+
+The fitness is stored in an array, computed for each individual of the 
+population, and returned to the BRKGA algorithm, in order to continue the 
+iteration.
+
 \end{document}
