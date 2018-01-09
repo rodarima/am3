@@ -140,7 +140,7 @@ class Solution:
 				st = '.'
 				if self.P[n, h] == -1: st = ' '
 				elif self.W[n, h] == 1: st = 'W'
-				elif self.P[n, h] == 1: st = 'R'
+				elif self.P[n, h] == 1: st = '-'
 				s += '{} '.format(st)
 			s += '\n'
 		s += line

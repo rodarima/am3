@@ -16,8 +16,7 @@ import cProfile
 # be able to beat this time...
 
 seed = 8
-nurses = 25
-tries = 10
+nurses = 50
 alpha = 0.1
 problems = 10
 solved = 0
@@ -94,34 +93,3 @@ while True:
 print(tabulate(table, headers='keys'))
 
 #pr.print_stats(sort='cumtime')
-
-#p = Problem(3)
-#s = None
-#RUNS = 1
-#successful = 0
-#for i in range(RUNS):
-#	iteration = i+1
-#	# Reproducible runs
-#	np.random.seed(iteration)
-#	p.random()
-#	print("Iteration {}/{}".format(iteration, RUNS))
-#	s = SolutionLP(p, 'nurses')
-#	#s = SolutionGrasp(p, 'nurses')
-#	solver_params = dict(keepFiles=0, msg=0)
-#
-#	# "BECAUSE THERE IS NO CHOICE!"
-#
-#	#solver = COIN(**solver_params)
-#	#solver = CPLEX(**solver_params)
-#	solver = GLPK(**solver_params)
-#	s.solve(solver)
-#	bad = s.check()
-#	print("bad = {}".format(bad))
-#	#print(p)
-#	#s.print()
-#		# print(s.solution)
-#	#if status == 1:
-#		#print('Found')
-#	#	successful += 1
-#
-##print()
