@@ -252,4 +252,31 @@ The fitness is stored in an array, computed for each individual of the
 population, and returned to the BRKGA algorithm, in order to continue the 
 iteration.
 
+\section{Results}
+
+The three solvers were compared solving equal problems, with a big number of 
+nurses.
+
+\begin{table}[h]
+%\footnotesize
+\centering
+\begin{tabular}{cccccccc}
+\toprule
+       &          &\multicolumn{2}{c}{ILP} & \multicolumn{2}{c}{GRASP} & \multicolumn{2}{c}{BRKGA} \\
+Seed   &  Nurses  & Obj. & Time & Obj. & Time & Obj. & Time \\
+\midrule
+     8 &     90   &     41   & 61.1    &       52  &   62.9      &     ?      &  83.1809 \\
+     9 &     90   &     39   & 61.2    &       ?   &  619.3      &     42     &  71.2341 \\
+    10 &     90   &     39   & 61.2    &       56  &   62.2      &     42     &  51.6024 \\
+    11 &     90   &     31   & 61.2    &       43  &   63.4      &     44     &  46.2278 \\
+    12 &     90   &     39   & 61.2    &       46  &  127.4      &     41     &  96.5402 \\
+    13 &     90   &     36   & 61.1    &       ?   &  638.2      &     ?      &  81.3786 \\
+    14 &     90   &     39   & 61.1    &       51  &   95.3      &     ?      &  71.1666 \\
+    15 &     90   &     31   & 61.2    &       42  &   32.2      &     43     &  65.3363 \\
+    16 &     90   &     35   & 61.1    &       56  &  189.3      &     44     &  45.5936 \\
+    17 &     90   &     35   & 61.2    &       57  &   31.5      &     42     &  63.4561 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \end{document}
