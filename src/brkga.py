@@ -189,10 +189,10 @@ class SolutionBRKGA(Solution, BRKGA):
 		demand = self.problem.demand
 		demand_left = demand.copy()
 		offer = np.zeros(self.H, dtype='int')
-		bad_demand = 0
-		bad_hours = 0
-		bad_consec = 0
-		bad_far = 0
+		bad_demand = 0		#BD
+		bad_hours = 0		#BH
+		bad_consec = 0		#BC
+		bad_far = 0			#BF
 		bad = [0,0,0,0]
 		inf = 1000
 		nurses_needed = 0
@@ -353,12 +353,13 @@ class SolutionBRKGA(Solution, BRKGA):
 		#bad1, bad2, bad3, bad4
 
 		if fit < self.best_fit:
-			print(self)
+			if self.debug:
+				print(self)
 			line = 'best={:8.2f}  bad: dem={:2d}  h={:2d}  \
 consec={:2d}  far={:2d}'.format(
 				fit, *bad)
-			print('BAD consec={:7.2f} h={:7.2f} dem={:7.2f} far={:7.2f}'.format(
-				bad_consec, bad_hours, bad_demand, bad_far))
+			#print('BAD consec={:7.2f} h={:7.2f} dem={:7.2f} far={:7.2f}'.format(
+			#	bad_consec, bad_hours, bad_demand, bad_far))
 			print(line)
 
 		#print('\r{}'.format(line), end='', flush=True)

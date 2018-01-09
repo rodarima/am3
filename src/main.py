@@ -21,11 +21,11 @@ nurses = 90
 alpha = 0.1
 problems = 10
 done = 0
-time_limit = 20
+time_limit = 60
 
 DEBUG = True
-RUN_LP = False
-RUN_GRASP = False
+RUN_LP = True
+RUN_GRASP = True
 RUN_BRKGA = True
 
 table = []
@@ -61,7 +61,6 @@ while True:
 		#	print('FATAL: Solution not feasible. There is a BUG in LP')
 		#	continue
 
-		done+=1
 
 		row['lp_obj'] = lp.objective()
 		row['lp_t'] = t
@@ -119,6 +118,7 @@ while True:
 	print("Results at the time:")
 	print(tabulate(table, headers='keys'))
 
+	done+=1
 	if done >= problems: break
 
 print(tabulate(table, headers='keys'))
