@@ -268,3 +268,6 @@ class Solution:
 
 		return True
 
+if __name__ == '__main__':
+	p = Problem(1, 10)
+	print(p)
