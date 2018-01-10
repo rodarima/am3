@@ -5,6 +5,19 @@
 \usepackage[utf8]{inputenc}
 \usepackage{hyperref}
 \usepackage{booktabs}
+\usepackage{minted}
+\newminted{py}{%
+%		linenos,
+		fontsize=\small,
+		tabsize=2,
+		mathescape,
+}
+\newminted{text}{%
+%		linenos,
+		fontsize=\small,
+		tabsize=2,
+		mathescape,
+}
 
 \title{Course project}
 \author{Shams Methnani \& Rodrigo Arias Mallo}
@@ -15,25 +28,32 @@
 \section{Problem statement}
 
 
-Our problem to solve is to optimally assign nurses to working hours in a hospital such that demand for each hour is met and the fewest number of nurses are used.
+Our problem to solve is to optimally assign nurses to working hours in a 
+hospital such that demand for each hour is met and the fewest number of nurses 
+are used.
 
-This is an NP-hard problem in combinatorial optimization. It can be formulated as an integer program.
+This is an NP-hard problem in combinatorial optimization. It can be formulated 
+as an integer program.
 
-We are given a set of nurses, a specification of the demands for each hour as well as a set of constraints that must be satisfied regarding how long each nurse can work.
+We are given a set of nurses, a specification of the demands for each hour as 
+well as a set of constraints that must be satisfied regarding how long each 
+nurse can work.
 
 \subsection{Parameters}
 
-We are given a set of available nurses of size $N$, a list ${demand}_h$ of size $H$ with the number of nurses needed each hour, as well as the constraints that must be satisfied.
-
-The parameters are given as follows:
-    \begin{enumerate}
-    \paragraph{}
-        \item [${demand}_h$] a list of demands for each hour
-        \item [${maxHours}$] maximum number of hours each nurse may work
-        \item [${minHours}$] minimum number of hours each nurse may work
-        \item [${maxConsec}$] maximum number of consecutive hours each nurse may work
-        \item [${maxPresence}$] maximum number of hours each nurse may be present at the hospital after arriving
-    \end{enumerate}
+We are given a set of available nurses of size $N$, a list ${demand}_h$ of size 
+$H$ with the number of nurses needed each hour, as well as the constraints that 
+must be satisfied. The parameters are given as follows:
+%
+\begin{center}
+\begin{tabular}{rl}
+$demand_h$ 			&	Demand for each hour $h$ \\
+$maxHours$ 			& Max. number of hours each nurse can work \\
+$minHours$ 			& Min. number of hours each nurse can work \\
+$maxConsec$ 		& Max. consecutive hours each nurse can work \\
+$maxPresence$ 	& Max. hours present at the hospital\\
+\end{tabular}
+\end{center}
 %
 \subsection{Decision variables}
 
@@ -122,36 +142,41 @@ $$ T_{n,h} \le P_{n, h} $$
 The GRASP method is a metaheuristic in which each iteration consists of two
 phases: construction and local search.
 
-First, we need to specify the problem in terms of part that can be selected. The
-ground set $E$ contains elements that can be selected in order to build a
-solution. Let $S$ be a possible solution by selecting parts of $E$, so $S \in
-2^E$. We can build $F$ as the set of solutions that are feasible $F \subseteq
+First, we need to specify the problem in terms of parts that can be selected.  
+The ground set $E$ contains elements that can be selected in order to build a 
+solution. Let $S$ be a possible solution by selecting parts of $E$, so $S \in 
+2^E$. We can build $F$ as the set of solutions that are feasible $F \subseteq 
 2^E$
 
-In our problem, we need to select the behavior of $N$ nurses. A possible solution
-can be defined by the selection of elements that describe what a nurse $n$ is
-doing at the time $h$. A tuple $t = (n, h, s)$ can code that the nurse $n$
-should be at state $s$ in the time $h$. A feasible solution $S$ should consist
-of a selection of tuples $t$ such that, they define the behavior of every nurse
-at every time, and also satisfy the previous constraints.
+In our problem, we need to select the behavior of $N$ nurses. A possible 
+solution can be defined by the selection of elements that describe what a nurse 
+$n$ is doing at the time $h$. A tuple $t = (n, h, s)$ can code that the nurse 
+$n$ should be at state $s$ in the time $h$. The state can be 0 if the nurse is 
+not at the hospital, 1 if is working, or 2 if is resting. A feasible solution 
+$S$ should consist of a selection of tuples $t$ such that, they define the 
+behavior of every nurse at every time, and also satisfy the previous 
+constraints.
 
-Furthermore, in order to build a solution, a notion of cost is needed to select
-among all the possible tuples that can be selected. Lets ignore the constraints
-in the cost function, and check the feasibility at the end. Iteratively we can
+Furthermore, in order to build a solution, a notion of cost is needed to select 
+among all the possible tuples that can be selected. Lets ignore the constraints 
+in the cost function, and check the feasibility at the end. Iteratively we can 
 select a naive solution by a simple procedure.
 
 
-We begin with an empty solution, at time $h = 1$. At that time, we have a demand $d$ given by
-$\textrm{demand}_h$. A good candidate will be try to meet the demand by adding nurses that are already working. We create the restricted candidate list (RCL) by selecting working nurses with high probability. Then, one of the possible
-combinations will be chosen, optimistically assigning one nurse to work in that time.
-Then we continue adding nurses in a working state. Once the demand is met, then
-we now will prefer adding to the solution tuples that contain nurses in a
-non-working status. The probability of such state should now be added with high
-probability.
+We begin with an empty solution, $S=\{\}$. Then we compute the cost of all the 
+possible elements that can be added to the solution. A good candidate will be 
+try to meet the demand by adding nurses that are in the working state.
+
+We create the restricted candidate list (RCL) by selecting working nurses with 
+high probability. Then, one of the possible combinations will be chosen, 
+optimistically assigning one nurse to work in that time.  Then we continue 
+adding nurses in a working state.  Once the demand is met, then we now will 
+prefer adding to the solution tuples that contain nurses in a non-working state.  
+The probability of such state should now be added with high probability.
 
 The selection of the cost function is the core of the GRASP algorithm, so we
 need to take some care to guarantee a good behavior.
-
+%
 \section{BRKGA}
 %
 Genetic algorithms borrow mechanisms from nature, namely the concept of survival
@@ -277,6 +302,108 @@ Seed   &  Nurses  & Obj. & Time & Obj. & Time & Obj. & Time \\
     17 &     90   &     35   & 61.2    &       57  &   31.5      &     42     &  63.4561 \\
 \bottomrule
 \end{tabular}
+\caption{Results with the different methods}
+\label{tab:res}
 \end{table}
+
+\section{Structure of the project}
+
+\subsection{The OPL model}
+
+The ILP problem was first written in OLP by using a small example, and it can be 
+found in the \texttt{opl/} folder. The \texttt{proj.mod} file contains the model 
+of the problem, and the example data is stored in \texttt{proj.dat}. A small 
+python script and a CPLEX batch file help the extraction of the solution. The 
+Makefile is designed to use \texttt{oplrun} and \texttt{cplex} to solve the 
+problem and present the solution. The \texttt{oplrun} program evaluates the 
+model and builds the file \texttt{sol.lp}, which is solved by the \texttt{cplex} 
+program. The script \texttt{cplex-save.txt} provide CPLEX the instructions to 
+save the solution in \texttt{sol.xml} in order to be read by the python script 
+\texttt{cplex-save.txt}:
+
+\begin{textcode}
+% cd opl/
+% make
+...
+cplex -f cplex-save.txt
+
+Welcome to IBM(R) ILOG(R) CPLEX(R) Interactive Optimizer 12.6.0.0
+...
+Root relaxation solution time = 0.00 sec. (0.15 ticks)
+...
+python read-sol.py
+NStart
+[[0 0 0 0 1 0]
+ [1 0 0 0 0 0]
+ [1 0 0 0 0 0]]
+NWorking
+[[0 0 0 0 1 1]
+ [1 1 0 0 0 0]
+ [1 1 0 0 0 0]]
+NPresent
+[[0 0 0 0 1 1]
+ [1 1 0 0 0 0]
+ [1 1 0 0 0 0]]
+\end{textcode}
+
+As we need to run and evaluate a lot of problems, this method is a bit complex, 
+as requires the problem to be defined in the OPL data language.  We opted for 
+the use of the PuLP python package to communicate with CPLEX, in order to write 
+the problem and read the solution as well as the objective value, more easily.
+
+\subsection{The PuLP model}
+
+The PuLP package provides a almost transparent interface to work with multiple 
+solvers. We used the CPLEX solver by default, as it seems to be the fastest.
+
+The same constraints in \texttt{opl/proj.mod} were translated into python. The 
+file \texttt{src/lp.py} contains the ILP model in python. A class 
+\texttt{Solution} provides a generic method \texttt{solve} to be implemented, as 
+well as an instance to a problem to be solved.
+
+The instance generator is built in the \texttt{Problem} class, located in 
+\texttt{nurses.py}
+
+\subsection{Instance generator}
+
+Random instances of the problem are generated by using the parameters: 
+\texttt{seed} the random seed, \texttt{N} the number of nurses and \texttt{H} 
+the hours in a day, set by default to 24.
+
+We used a random distribution, with more expected value in the daily hours, 
+behaving similarly to a real case. Once a instance problem generated can be 
+solved by any solver. An example problem:
+
+\begin{textcode}
+% python nurses.py
+Problem(seed=1, N=10, H=24)
+-------------------------------------------------------
+hour  0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 2 2 2 2 
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 
+-------------------------------------------------------
+dem.  1 1 0 0 1 0 0 2 1 2 2 2 3 2 3 1 1 0 1 0 0 0 1 0 
+-------------------------------------------------------
+ maxConsec   : 7
+ maxPresence : 9
+ maxHours    : 8
+ minHours    : 8
+-------------------------------------------------------
+\end{textcode}
+
+%\subsection{Solvers}
+
+
+\section{How to run}
+The ILP, GRASP and BRKGA solvers are coded in a extension of the 
+\texttt{Solution} class, placed in \texttt{src/}, in the files \texttt{lp.py}, 
+\texttt{grasp.py} and \texttt{brkga.py}, respectively.
+
+Each solver is iteratively choosen to solve the same problem. Once all the 
+solutions are computed, a new random problem is generated and solved again. The 
+file \texttt{main.py} produces the table~\ref{tab:res}. Can be executed as:
+%
+\begin{textcode}
+% python main.py
+\end{textcode}
 
 \end{document}
