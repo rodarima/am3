@@ -5,6 +5,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{hyperref}
 \usepackage{booktabs}
+\usepackage{float}
 \usepackage{minted}
 \newminted{py}{%
 %		linenos,
@@ -41,12 +42,12 @@ nurse can work.
 
 \subsection{Parameters}
 
-We are given a set of available nurses of size $N$, a list ${demand}_h$ of size 
-$H$ with the number of nurses needed each hour, as well as the constraints that 
-must be satisfied. The parameters are given as follows:
+The problem is described by the following set of parameters:
 %
 \begin{center}
 \begin{tabular}{rl}
+$N$             & The number of nurses available \\
+$H$             & The hours in a day \\
 $demand_h$ 			&	Demand for each hour $h$ \\
 $maxHours$ 			& Max. number of hours each nurse can work \\
 $minHours$ 			& Min. number of hours each nurse can work \\
@@ -57,89 +58,73 @@ $maxPresence$ 	& Max. hours present at the hospital\\
 %
 \subsection{Decision variables}
 
-For the problem, we define three matrices as decision variables. The last one is
-auxiliary.
+For the problem, we used three binary matrices $P$, $W$ and $S$ of size $N 
+\times H$ as decision variables.  The last one is auxiliary. The matrix $P$ has 
+the element $P_{n,h} = 1$ if the nurse $n$ is present at the hospital
+at hour $n$, also if is working, $W_{n,h} = 1$, otherwise 0. The matrix $S$ is 
+an auxiliary matrix, with the element $S_{n,h} = 1$ if the nurse $n$ starts at 
+the hospital at the hour $h$, the first hour that is present, otherwise 0.
+
+\subsection{Formal definition}
+
+Minimize the objective function:
 %
-\begin{table}[h]
-\centering
-\begin{tabular}{c l}
-\toprule
-Symbol & Type and size \\
-\midrule
-$P$ & Binary matrix of size $N \times H$.\\
-$W$ & Binary matrix of size $N \times H$.\\
-$T$ & Binary matrix of size $N \times H$.\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\noindent
-The matrix $P$ has the element $P_{n,h} = 1$ if the nurse $n$ is present at the hospital
-at hour $n$, also if is working, $W_{n,h} = 1$, otherwise 0.
+$$\sum_{n=1}^N \sum_{h=1}^H S_{n,h} $$
 %
-The matrix $T$ is an auxiliary matrix, with the element $T_{n,h} = 1$ if the
-nurse $n$ is travelling to the hospital at the hour $h$, otherwise 0.
-
-\subsection{Constraints}
-
-\paragraph{Constraint 1} At least $\textrm{demand}_h$ nurses should be working
+Subject to the following constraints:
+%
+\paragraph{Constraint 1} At least $demand_h$ nurses should be working
 at the hour $h$.
-$$ \forall h\in [1, H],\, \sum_{n \in N} W_{n,h} \ge \textrm{demand}_h$$
+$$ 1 \le h \le H,\quad \sum_{n=1}^N W_{n,h} \ge demand_h$$
 %
-\paragraph{Constraint 2} Each working nurse should work at least minHours.
-$$ \forall n \in N,\, \sum_{h \in [1, H]} W_{n,h} \ge
-  \textrm{minHours} * \sum_{j \in [1, H]} T_{n,j} $$
+\paragraph{Constraint 2} Each working nurse should work at least $minHours$.
+$$ 1 \le n \le N,\quad \sum_{h = 1}^H W_{n,h} \ge
+	minHours \cdot \sum_{j=1}^H S_{n,j} $$
 %
-\paragraph{Constraint 3} Each nurse should work at most maxHours.
-$$ \forall n \in N,\, \sum_{h \in [1, H]} W_{n,h} \le \textrm{maxHours} $$
+\paragraph{Constraint 3} Each nurse should work at most $maxHours$.
+$$ 1 \le n \le N,\quad \sum_{h = 1}^H W_{n,h} \le maxHours $$
 %
-\paragraph{Constraint 4a} Each nurse should work at most maxConsec consecutive
+\paragraph{Constraint 4} Each nurse should work at most $maxConsec$ consecutive
 hours.
-$$ \forall n \in N,\, \forall h \in [1, \textrm{H} - \textrm{maxConsec}],$$
-$$\sum_{k \in [0, maxConsec]} W_{n, h+k} \le \textrm{maxConsec}
-$$
-%
-\paragraph{Constraint 4b} Wrap around case for maxConsecutive hours.
-$$ \forall n \in N,\, \forall h \in [1, \textrm{maxConsec}],$$
-$$\sum_{j \in [1, h]} W_{n, j} +
-  \sum_{j \in [H-maxConsec+h, H]} W_{n, j}  \le \textrm{maxConsec}
+$$ 1 \le n \le N,\quad 1 \le h \le H - maxConsec, \quad 1 \le k \le maxConsec,$$
+$$\sum_k W_{n, h+k} \le maxConsec
 $$
 %
 \paragraph{Constraint 5} No nurse can stay at the hospital for more than
-maxPresence hours.
-$$ \forall n \in N, \, \sum_{h \in [1, H]} P_{n,h} \le \textrm{maxPresence} $$
+$maxPresence$ hours.
+$$ 1 \le n \le N, \quad \sum_{h = 1}^H P_{n,h} \le maxPresence $$
 %
 \paragraph{Constraint 6} No nurse can rest for more than one consecutive hour.
-$$ \forall n \in N,\, \forall h \in [1, \textrm{H-1}],$$
-$$W_{n, h} + W_{n, h+1} \ge P_{n,h+1} $$
+$$ 1 \le n \le N,\quad  1 \le h \le H-1,$$
+$$ P_{n,h} - W_{n, h} + P_{n,h+1} - W_{n, h+1} \le 1 $$
 %
-\paragraph{Constraint 7} Working nurses can travel to hospital at most once.
-$$ \forall n \in N,\,$$
-$$ \sum_{h \in [1, H]} T_{n,h} \le 1 $$
+\paragraph{Constraint 7} Working nurses can start at most once.
+$$ 1 \le n \le N,\quad \sum_{h = 1}^H S_{n,h} \le 1 $$
 %
-\paragraph{Constraint 8a} If a nurse is present at current hour and wasn't at
-previous hour, then they traveled to hospital at current hour.
-$$ \forall n N, \,\forall h \in [2, \textrm{H}],\,$$
-$$ T_{n,h} \ge 1 - P_{n, h-1} + P_{n, h} - 1 $$
+\paragraph{Constraint 8a} If a nurse is present at hour $h$ and wasn't at
+previous hour, then started at current hour $h$.
+$$ 1 \le n \le N, \quad 2 \le h \le H,$$
+$$ S_{n,h} \ge 1 - P_{n, h-1} + P_{n, h} - 1 $$
 %
-\paragraph{Constraint 8b} Add case for wrap-around
-$$ \forall n \in N,\,$$
-$$ T_{n, 1} \ge 1 - P_{n, H} + P_{n, 1} - 1 $$
+\paragraph{Constraint 8b} Add case for the first hour, if is present, has 
+started at the first hour.
+$$ 1 \le n \le N,$$
+$$ S_{n, 1} = P_{n, 1} $$
 %
-\paragraph{Constraint 9} If nurse travels at current hour, then they were not
+\paragraph{Constraint 9} If a nurse starts at current hour, then was not
 present at previous hour.
-$$ \forall n \in N,\,\forall h \in [2, \textrm{H}],\,$$
-$$ T_{n,h} \le 1 - P_{n, h-1} $$
+$$ 1 \le  n \le N ,\quad 2 \le h \le H,$$
+$$ S_{n,h} \le 1 - P_{n, h-1} $$
 %
-\paragraph{Constraint 10} If nurse travels at current hour, then they are
+\paragraph{Constraint 10} If a nurse starts at current hour, then should be
 present at current hour.
-$$ \forall n \in N,\,\forall h \in [1, H],\,$$
-$$ T_{n,h} \le P_{n, h} $$
+$$ 1 \le n \le N,\quad 2 \le h \le H,$$
+$$ S_{n,h} \le P_{n, h} $$
 %
 %
 \section{GRASP}
 %
-The GRASP method is a metaheuristic in which each iteration consists of two
+The GRASP method is a metaheuristic in which each iteration consists of two 
 phases: construction and local search.
 
 First, we need to specify the problem in terms of parts that can be selected.  
@@ -163,9 +148,12 @@ in the cost function, and check the feasibility at the end. Iteratively we can
 select a naive solution by a simple procedure.
 
 
-We begin with an empty solution, $S=\{\}$. Then we compute the cost of all the 
-possible elements that can be added to the solution. A good candidate will be 
-try to meet the demand by adding nurses that are in the working state.
+%
+\subsection{Constructive phase}
+%
+We begin with an empty solution. Then we compute the cost of all the possible 
+elements that can be added to the solution. A good candidate will try to meet 
+the demand by adding nurses that are in the working state.
 
 We create the restricted candidate list (RCL) by selecting working nurses with 
 high probability. Then, one of the possible combinations will be chosen, 
@@ -174,137 +162,343 @@ adding nurses in a working state.  Once the demand is met, then we now will
 prefer adding to the solution tuples that contain nurses in a non-working state.  
 The probability of such state should now be added with high probability.
 
+A small snippet of a simplified python pseudocode can be found below, describing 
+the constructive phase as the \texttt{greedy\_build} function.
+%
+\begin{pycode}
+def greedy_build(self, alpha):
+	solution = set()
+	C = self.initial_candidates()
+	while len(C) != 0:
+		costs = self.evaluate_costs(C, solution)
+		cmin = np.min(costs)
+		cmax = np.max(costs)
+		cmed = cmin + alpha * (cmax - cmin)
+		RCL_indices = np.where(costs <= cmed)[0]
+		si = np.random.choice(RCL_indices)
+		s = C[si]
+
+		self.select_candidate(solution, s)
+		C = self.update_candidates(C, s)
+	return solution
+\end{pycode}
+%
+We see the algorithm follows closely the definition of the GRASP metaheuristic.  
+The RCL equation, is almost the same.
+$$
+	RCL = \{e \in C \mid c(e) \le c_{min} + \alpha (c_{max} - c_{min})\}
+$$
 The selection of the cost function is the core of the GRASP algorithm, so we
 need to take some care to guarantee a good behavior.
+
+\subsection{Cost function}
+
+The function was designed to select at each step the most promising element. Is 
+based on a set of rules to assign large weights to infeasible actions. All the 
+elements in the set of candidates $C$ are evaluated. A simplified version is 
+shown below.
 %
+\begin{pycode}
+	def evaluate_costs(self, C, solution):
+		...
+		costs = np.zeros([len(C)], dtype='int')
+		infos = []
+		inf = 1000
+
+		for i in range(len(C)):
+			e = C[i]
+			cost = 0
+			info = ''
+			n, h, s = e
+
+			already_assigned = (n,h) in self.assigned
+
+			working_time = self.worktime[n]
+
+			present_hours = self.presencetime[n]
+
+			work_done = self.workdone[h]
+			demand_left = p.demand[h] - work_done
+			hours_left = p.minHours - work_done
+
+			can_work_consec = self.consec_table[n, h]
+
+			already_started = present_hours >= 1
+			is_next_hour_present = ((n,h+1,1) in solution 
+				or (n,h+1,2) in solution)
+			is_previous_hour_present = ((n,h-1,1) in solution 
+				or (n,h-1,2) in solution)
+
+			is_next_hour_home = (n,h+1,0) in solution
+			is_previous_hour_home = (n,h-1,0) in solution
+
+			break_previous_hour = (n, h-1, 2) in solution
+			break_next_hour = (n, h+1, 2) in solution
+
+			# If we already have a assigned state, avoid
+			if already_assigned:
+				costs[i] = inf
+				continue
+
+			if s in {1, 2}: # Present at the hospital
+
+				# If we are already the maximum time at the hospital, avoid
+				if present_hours >= p.maxPresence:
+					costs[i] = inf
+					continue
+
+				if already_started:
+
+					# If already started, and is next and previous hour home,
+					# avoid going work again
+
+					# If is adding more consecutive hours, prefer
+					if is_next_hour_present or is_previous_hour_present:
+						# But only if is some demand at that point
+						if demand_left > 0:
+							cost -= 333
+
+					# Otherwise, try to avoid
+					else:
+						costs[i] = inf + 4
+						continue
+
+			if s == 0: # Home
+				if already_started:
+
+					# Delay going home if is not at the hospital
+					if not is_next_hour_present:
+						cost += 401
+
+					else:
+						cost += 401
+
+				else:
+					# Delay if didnt started
+					cost += 500
+
+			elif s == 1: # Working
+
+				# Avoid more work than allowed
+				if working_time >= p.maxHours:
+					costs[i] = inf
+					continue
+
+				# Avoid working more than maxConsec hours
+				if can_work_consec == 0:
+					costs[i] = inf + 2
+					continue
+
+				# We want a new nurse proportional to the demand
+				if demand_left > 0:
+					cost -= demand_left * 100
+
+				# Also try to reach minHours only if already started
+				if hours_left > 0 and already_started:
+					cost -= hours_left * 51
+
+				# Try to avoid work if there is no demand
+				if not already_started and demand_left <= 0:
+					cost += 700
+
+			elif s == 2: # Break
+				# If was already resting, avoid at all costs
+				if break_previous_hour or break_next_hour:
+					costs[i] = inf
+					continue
+
+				# Only rest if it's better than work
+				if already_started:
+					cost += 50
+				else:
+					cost += 700
+
+			costs[i] = cost
+
+		return costs
+\end{pycode}
+
+
+\subsection{Local search}
+%
+Local search was not used, the greedy construction phase has been optimized to 
+find a good solution by using an exaustive search of posibilities. The 
+pseudocode can be found below.
+%
+\begin{pycode}
+def local_search(self, solution):
+	while not is_locally_optimal(solution):
+		neighbors, costs = find_neigbors(solution)
+		index_best = np.argmin(costs)
+		solution = neighbors[index_best]
+	return solution
+\end{pycode}
+%
+
+\subsection{Comments}
+
+The implementation of the problem in GRASP can be greatly improved by using a 
+representation of the problem similar to the one used in BRGKA.
+
 \section{BRKGA}
 %
-Genetic algorithms borrow mechanisms from nature, namely the concept of survival
-of the fittest, in order to search a large solution space. A population of
-solutions is evolved over several generations by iteratively breeding new
-solutions by mating or \textit{crossing} individuals from previous generations.
-Biased Randomized-Key Genetic Algorithm (BRKGA) is such an algorithm in which
-certain members of the population are selected for crossover with higher
+Genetic algorithms borrow mechanisms from nature, namely the concept of survival 
+of the fittest, in order to search a large solution space. A population of 
+solutions is evolved over several generations by iteratively breeding new 
+solutions by mating or \textit{crossing} individuals from previous generations.  
+Biased Randomized-Key Genetic Algorithm (BRKGA) is such an algorithm in which 
+certain members of the population are selected for crossover with higher 
 probability.
 
-We represent our problem with a set of individuals with an associated
+We represent our problem with a set of individuals with an associated 
 \textit{chromosome}, each of which encodes a solution.
 
-Each individual or chromosome has associated with it a fittness score, which
-will determine if they are an \textit{elite individual} or \textit{non-elite
-individual}. We can now add a bias to the selection of the parentage for next
-generation individuals the selecting a parent from the elite set with a higher
+Each individual or chromosome has associated with it a fittness score, which 
+will determine if they are an \textit{elite individual} or \textit{non-elite 
+individual}. We can now add a bias to the selection of the parentage for next 
+generation individuals the selecting a parent from the elite set with a higher 
 probability in order to pass on desireable characteristics.
 
-Each chromosome is represented as a string of genes. Each gene takes on a
-particular value from an alphabet.
-
-Our matrix encodes start-hour, present-hour, number-breaks, break-score
-3 scalars and an array of scores in order to place breaks.
-
-% Each gene is a vector of size N\times(3+H), the first row
+We used the parameters $p(elite) = 0.1$, $p(mutant) = 0.2$, $p(inherit) = 0.7$ 
+and population number=10. The absolute maximum number of iterations is set to 
+10000, but is there if no improvement in the best fit, for the last 500 
+iterations, an early break happens.
 
 \subsection{Chromosome structure}
 
-The solution is codified by using three scalars $p$, $s$ and $b$ and a vector
-$v$ of size $H$ for each nurse. The scalars codify the number of hours $p$ that
-the nurse is present at the hospital, the first hour $s$ at which is at the
+The solution is codified by using three scalars $p$, $s$ and $b$ and a vector 
+$v$ of size $H$ for each nurse. The scalars codify the number of hours $p$ that 
+the nurse is present at the hospital, the first hour $s$ at which is at the 
 hospital, and the number of breaks $b$ while is present.
 
-The vector $v$ is used from $1$ to the number of present hours $p$. Each element
-stores a score that will be used to determine the preferred hours in which a
-break should be set. Lower scores will be selected first, filling the breaks up
+The vector $v$ is used from $1$ to the number of present hours $p$. Each element 
+stores a score that will be used to determine the preferred hours in which a 
+break should be set. Lower scores will be selected first, filling the breaks up 
 to $b$.
 
-The decision whether a nurse works or not, is based on $p$, if the presence
+The decision whether a nurse works or not, is based on $p$, if the presence 
 hours are less than $minHours$ the nurse doens't start working.
 
-The choromosome structure is then matrix of $N$ rows and $3+H$ columns, but
+The choromosome structure is then matrix of $N$ rows and $3+H$ columns, but 
 flattened into a long vector of size $N \times 3+H$.
 
 \subsection{Decoder}
 
-The decoder part of the algorithm, which is the only part that depends on the
-problem, computes the fitness of each individual in the population. The fitness
-$f(p,s,b,v)$ is a heuristic value that estimates the objective, and has to be
-minimized. Is computed by adding five badness values $BN$, $BD$, $BH$, $BC$ and
+The decoder part of the algorithm, which is the only part that depends on the 
+problem, computes the fitness of each individual in the population. The fitness 
+$f(p,s,b,v)$ is a heuristic value that estimates the objective, and has to be 
+minimized. Is computed by adding five badness values $BN$, $BD$, $BH$, $BC$ and 
 $BF$ together.
 
-In order to compute the values, we first need to determine when each nurse
-works. By using $p$ and $s$ we have the interval that they are present.  And
+In order to compute the values, we first need to determine when each nurse 
+works. By using $p$ and $s$ we have the interval that they are present.  And 
 using the indices of the first $b$ lower values of $v$, we now where they rest.
 
-The number of nurses needed is the first value $BN$, which takes into account
+The number of nurses needed is the first value $BN$, which takes into account 
 that we want to minimize the number of nurses used.
 
-The value $BD$ measures the demand left that is not met. Is computed at each
-hour $h$ as the difference of the problem demand and the nurses offer (the
-working hours provided by the working nurses) as $BD = 100 \sum_h
+The value $BD$ measures the demand left that is not met. Is computed at each 
+hour $h$ as the difference of the problem demand and the nurses offer (the 
+working hours provided by the working nurses) as $BD = 100 \sum_h 
 \textrm{demand}_h - \textrm{offer}_h$.
 
-The value $BH(n)$ measures the error of each nurse $n$, when they work more than
-$maxHours$ or when they work less than $minHours$, we use $w = p - b$ to compute
-the number of working hours. If they work more hours than allowed, $BH(n)$ is
-set to the number of exceeding hours $w - maxHours$. If they work less than
-allowed, $BH(n)$ is set to the number of hours left $minHours - w$.  Finally, we
+The value $BH(n)$ measures the error of each nurse $n$, when they work more than 
+$maxHours$ or when they work less than $minHours$, we use $w = p - b$ to compute 
+the number of working hours. If they work more hours than allowed, $BH(n)$ is 
+set to the number of exceeding hours $w - maxHours$. If they work less than 
+allowed, $BH(n)$ is set to the number of hours left $minHours - w$.  Finally, we 
 get $BH = \sum_n 200 + 20 BH(n)$.
 
-Note that we use the floating point representation of the values $p$, $s$, $b$
-and $v$ when they are part of the fitness function. So we can allow that lower
-differences of each gene produce a change in the fitness function. Otherwise, we
+Note that we use the floating point representation of the values $p$, $s$, $b$ 
+and $v$ when they are part of the fitness function. So we can allow that lower 
+differences of each gene produce a change in the fitness function. Otherwise, we 
 use the integer representation of the parameters.
 
-The value $BC$ test if there is any problem with the maximum number of
-consecutive hours that each nurse is working. For each nurse $n$ the maximum
-number of consecutive hours $M$ is computed, and if is greater than $maxConsec$,
-$BC(n)$ is set to $100(M - maxConsec) - 10b$. We use the breaks to prefer those
+The value $BC$ test if there is any problem with the maximum number of 
+consecutive hours that each nurse is working. For each nurse $n$ the maximum 
+number of consecutive hours $M$ is computed, and if is greater than $maxConsec$, 
+$BC(n)$ is set to $100(M - maxConsec) - 10b$. We use the breaks to prefer those 
 solutions that include more breaks. Finally we have $BC = \sum_n BC(n)$.
 
-The value $BF$ measures the distance of the non-working nurses to the hours that
-have some demand left. The distance is computed for each hour with demand left
-$h$ to the closest hour $c$ that the nurse would start working if $p$ was at
-least $minHours$. Is the start hour $s$ when $s > h$ and the end hour $s+p$ when
-$s+p < h$. So, if the nurse don't cover the hour $h$, $BF(n) = h - c$. However,
-if the nurse could cover the hour, without changing start, we only need to take
-into account the distance to minHours, so $BF(n) = minHours - p$. The final
+The value $BF$ measures the distance of the non-working nurses to the hours that 
+have some demand left. The distance is computed for each hour with demand left 
+$h$ to the closest hour $c$ that the nurse would start working if $p$ was at 
+least $minHours$. Is the start hour $s$ when $s > h$ and the end hour $s+p$ when 
+$s+p < h$. So, if the nurse don't cover the hour $h$, $BF(n) = h - c$. However, 
+if the nurse could cover the hour, without changing start, we only need to take 
+into account the distance to minHours, so $BF(n) = minHours - p$. The final 
 value is the sum for all nurses that are non-working, $BF = \sum_n BF(n)$
 
 The final fitness value is just the sum of all the intermediate values:
 
 $$ f(p,s,b,v) = BN + BD + BH + BC + BF $$
 
-The fitness is stored in an array, computed for each individual of the
-population, and returned to the BRKGA algorithm, in order to continue the
+The fitness is stored in an array, computed for each individual of the 
+population, and returned to the BRKGA algorithm, in order to continue the 
 iteration.
 
 \section{Results}
 
-The three solvers were compared solving equal problems, with a big number of
-nurses.
+The three solvers were compared solving equal problems, with a big number of 
+nurses. The CPLEX solver was limit to 1 minute of execution time, and the best 
+solution found was used. In the table~\ref{tab:results} we can see the exection 
+time in seconds, as well as the best objective value found, the number of nurses 
+needed, for each method. A \texttt{*} symbol is used to represent that the 
+method did not found any solution. By setting the seed to the indicated value, a 
+reproducible run should produce the same results (time may vary).
 
-\begin{table}[h]
+\begin{table}[ht]
 %\footnotesize
 \centering
 \begin{tabular}{cccccccc}
 \toprule
-       &          &\multicolumn{2}{c}{ILP} & \multicolumn{2}{c}{GRASP} & \multicolumn{2}{c}{BRKGA} \\
-Seed   &  Nurses  & Obj. & Time & Obj. & Time & Obj. & Time \\
+&&\multicolumn{2}{c}{ILP}
+& \multicolumn{2}{c}{GRASP}
+& \multicolumn{2}{c}{BRKGA} \\
+Seed & Nurses & Obj. & Time & Obj. & Time  & Obj. & Time  \\
 \midrule
-    18 &     90   &     37   & 20.5827    &       -1  &  378.503   &        45  &   54.0367 \\
-    19 &     90   &     31   & 20.7127    &       46  &   31.9158  &        33  &   28.3896 \\
-    20 &     90   &     31   & 20.7065    &       43  &   15.0676  &        38  &   19.6124 \\
-    21 &     90   &     33   & 20.6156    &       -1  &  324.459   &        -1  &   54.9723 \\
-    22 &     90   &     40   & 20.6864    &       -1  &  479.267   &        -1  &   119.499 \\
-    23 &     90   &    nan   & 3.95183    &      -1   &  472.354   &        -1  &   76.2215 \\
-    24 &     90   &     32   & 20.7079    &       46  &  17.5616   &       -1   &   26.7996 \\
-    25 &     90   &     31   & 20.7405    &       46  &  17.2715   &       -1   &   37.0984 \\
-    26 &     90   &     40   & 20.7236    &       60  & 175.321    &       39   &   67.1937 \\
-    27 &     90   &     35   & 20.7636    &       -1  & 353.639    &       37   &   48.7702 \\
+	8  &     90 &  41  & 61.1 &  52  &  62.9 &  *   &  83.1 \\
+	9  &     90 &  39  & 61.2 &   *  & 619.3 &  42  &  71.2 \\
+	10 &     90 &  39  & 61.2 &  56  &  62.2 &  42  &  51.6 \\
+	11 &     90 &  31  & 61.2 &  43  &  63.4 &  44  &  46.2 \\
+	12 &     90 &  39  & 61.2 &  46  & 127.4 &  41  &  96.5 \\
+	13 &     90 &  36  & 61.1 &   *  & 638.2 &  *   &  81.3 \\
+	14 &     90 &  39  & 61.1 &  51  &  95.3 &  *   &  71.1 \\
+	15 &     90 &  31  & 61.2 &  42  &  32.2 &  43  &  65.3 \\
+	16 &     90 &  35  & 61.1 &  56  & 189.3 &  44  &  45.5 \\
+	17 &     90 &  35  & 61.2 &  57  &  31.5 &  42  &  63.4 \\
+	18 &     90 &  37  & 61.8 &   *  & 378.5 &  45  &  54.0 \\
+	19 &     90 &  31  & 61.1 &  46  &  31.9 &  33  &  28.3 \\
+	20 &     90 &  31  & 61.1 &  43  &  15.0 &  38  &  19.6 \\
+	21 &     90 &  33  & 61.1 &   *  & 324.4 &   *  &  54.9 \\
+	22 &     90 &  40  & 61.1 &   *  & 479.2 &   *  & 119.4 \\
+	23 &     90 &   *  &  1.5 &   *  & 472.3 &   *  &  76.2 \\
+	24 &     90 &  32  & 61.1 &  46  &  17.5 &   *  &  26.7 \\
+	25 &     90 &  31  & 61.1 &  46  &  17.2 &   *  &  37.0 \\
+	26 &     90 &  40  & 61.1 &  60  & 175.3 &  39  &  67.1 \\
+	27 &     90 &  35  & 61.1 &   *  & 353.6 &  37  &  48.7 \\
+\midrule
+	30 &    150 &  60  & 61.9 &      &       &   *  & 236.9 \\
+	31 &    150 &  60  & 61.9 &      &       &  68  & 140.0 \\
+	32 &    150 &  56  & 61.9 &      &       &  64  & 200.1 \\
+	33 &    150 &  66  & 61.9 &      &       &   *  & 186.0 \\
+	34 &    150 &  67  & 61.9 &      &       &  72  & 293.6 \\
+	35 &    150 &  53  & 61.9 &      &       &  73  & 161.5 \\
+	36 &    150 &  75  & 61.9 &      &       &  77  & 152.3 \\
+	37 &    150 &  58  & 61.8 &      &       &  63  & 216.3 \\
+	38 &    150 &  62  & 61.8 &      &       &  64  & 219.8 \\
 \bottomrule
 \end{tabular}
-\caption{Results with the different methods}
-\label{tab:res}
+\caption{Results with the different methods. Time in seconds.}
+\label{tab:results}
 \end{table}
+
+We see that the ILP method gets a good solution, even with larger instances. It 
+is not able to compute the optimal solution, but the one found has a very low 
+objective value. The GRASP method however, not always is able to find a solution 
+and usually takes longer. The BRKGA method computes values close to the ILP 
+method, in about the same time for 90 nurses. However, is not alway able to find 
+one feasible.
 
 \section{Structure of the project}
 
@@ -361,10 +555,10 @@ file \texttt{src/lp.py} contains the ILP model in python. A class
 \texttt{Solution} provides a generic method \texttt{solve} to be implemented, as 
 well as an instance to a problem to be solved.
 
+\subsection{Instance generator}
+
 The instance generator is built in the \texttt{Problem} class, located in 
 \texttt{nurses.py}
-
-\subsection{Instance generator}
 
 Random instances of the problem are generated by using the parameters: 
 \texttt{seed} the random seed, \texttt{N} the number of nurses and \texttt{H} 
@@ -392,18 +586,22 @@ dem.  1 1 0 0 1 0 0 2 1 2 2 2 3 2 3 1 1 0 1 0 0 0 1 0
 
 %\subsection{Solvers}
 
-
 \section{How to run}
+
 The ILP, GRASP and BRKGA solvers are coded in a extension of the 
 \texttt{Solution} class, placed in \texttt{src/}, in the files \texttt{lp.py}, 
 \texttt{grasp.py} and \texttt{brkga.py}, respectively.
 
 Each solver is iteratively choosen to solve the same problem. Once all the 
 solutions are computed, a new random problem is generated and solved again. The 
-file \texttt{main.py} produces the table~\ref{tab:res}. Can be executed as:
+file \texttt{main.py} produces the table~\ref{tab:results}. Can be executed as:
 %
 \begin{textcode}
 % python main.py
 \end{textcode}
+%
+In order to execute the same results, fix the seed to the indicated in the 
+table. A total of 10 runs is set by default, automatically incrementing the 
+seed, and printing the intermediate table at each row.
 
 \end{document}
